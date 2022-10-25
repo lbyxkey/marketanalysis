@@ -1,0 +1,80 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.4'
+	id 'io.spring.dependency-management' version '1.0.14.RELEASE'
+	id 'java'
+}
+
+group = 'indi.lby'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '17'
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	maven {
+		url "https://repo.spring.io/release"
+	}
+	maven {
+		url "https://repository.jboss.org/maven2"
+	}
+	maven{
+		url "https://maven.aliyun.com/repository/central"
+	}
+	maven{
+		url "https://maven.aliyun.com/repository/spring"
+	}
+	maven{
+		url "https://maven.aliyun.com/repository/spring-plugin"
+	}
+	maven{
+		url "https://maven.aliyun.com/repository/public"
+	}
+	maven{
+		url "https://maven.aliyun.com/repository/google"
+	}
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation('org.springframework.boot:spring-boot-starter-web')
+	implementation "org.springframework.boot:spring-boot-starter-security"
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	runtimeOnly 'org.postgresql:postgresql'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	//webmagic爬虫，引入fastjson和jsoup新版修复安全bug
+	implementation 'us.codecraft:webmagic-core:0.7.5'
+	implementation('com.alibaba:fastjson:1.2.83')
+	implementation('org.jsoup:jsoup:1.15.3')
+	implementation 'us.codecraft:webmagic-extension:0.7.5'
+	//implementation 'us.codecraft:webmagic-selenium:0.7.5'
+	//使用graalvm提供js脚本引擎，运行同花顺token脚本
+	implementation 'org.graalvm.truffle:truffle-api:22.2.0'
+	implementation 'org.graalvm.truffle:truffle-dsl-processor:22.2.0'
+	implementation 'org.graalvm.js:js:22.2.0'
+	implementation 'org.graalvm.js:js-scriptengine:22.2.0'
+	//引入ta-lib，用于计算ma5等数据
+	implementation('com.tictactec:ta-lib:0.4.0')
+}
+
+tasks.named('test') {
+	//useJUnitPlatform()
+}
+
+tasks.named('bootBuildImage') {
+	builder = 'paketobuildpacks/builder:tiny'
+	environment = ['BP_NATIVE_IMAGE': 'true']
+}
+
+//processResources {
+//	include("**/*.*")
+//	include("**/static/*.*")
+//	include("**/templates/*.*")
+//}
