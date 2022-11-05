@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -46,6 +47,9 @@ public class SpiderService {
     THSConceptStockPipeline thsConceptStockPipeline;
     @Autowired
     JpaConceptRepository jpaConceptRepository;
+
+    @Autowired
+    JpaConceptStocksRepository jpaConceptStocksRepository;
     @Autowired
     THSConceptStockPageProcessor thsConceptStockPageProcessor;
     @Autowired
@@ -95,11 +99,12 @@ public class SpiderService {
     JpaStockBasicRepository jpaStockBasicRepository;
     List<StockBasic> stockBasicList;
 
-    @Autowired
     @Async
     public void runOnStart() throws JsonProcessingException {
         log.info("Spider Start runOnStart");
         updateCal();
+        updateStockBasic();
+        updateDaily();
         //如果上次距离本次时间大于24小时，刷新
         LocalDateTime now=LocalDateTime.now();
         String conceptUpdateDatetimeStr=stringRedisTemplate.opsForValue().get(conceptUpdateDatetimeName);
@@ -111,18 +116,6 @@ public class SpiderService {
         }else{
             updateTHSConcept();
         }
-        String stockbasicUpdateDatetimeStr=stringRedisTemplate.opsForValue().get(stockbasicUpdateDatetimeName);
-        if(stockbasicUpdateDatetimeStr!=null){
-            LocalDateTime stockbasicUpdateDatetime=LocalDateTime.parse(stockbasicUpdateDatetimeStr);
-            if(Duration.between(stockbasicUpdateDatetime,now).toHours()>=24){
-                updateStockBasic();
-            }else{
-                stockBasicList= jpaStockBasicRepository.findAll();
-            }
-        }else{
-            updateStockBasic();
-        }
-        updateDaily();
         updateTop10FloatHolder();
         updateEastMoneyPriceCore();
     }
@@ -156,7 +149,6 @@ public class SpiderService {
         spider.addRequest(request);
         spider.run();
         log.info("刷新股票列表-完成");
-        stringRedisTemplate.opsForValue().set(stockbasicUpdateDatetimeName, LocalDateTime.now().format(formatter));
         stockBasicList= jpaStockBasicRepository.findAll();
     }
 
@@ -166,13 +158,14 @@ public class SpiderService {
     public void updateDaily() throws JsonProcessingException {
         log.info("刷新日线");
         Daily daily = jpaDailyRepository.findFirstByOrderByTradedateDesc();
-        LocalDate maxDate = daily.getTradedate().getCaldate().plusDays(1);;
-//        Calendar calendar=new GregorianCalendar();
-//        calendar.setTimeInMillis(maxDate.getTime());
-//        calendar.add(Calendar.DATE,1);
-//        maxDate.setTime(calendar.getTimeInMillis());
-        List<TradeCal> tradeCalList = jpaTradeCalRepository.findAllByCaldateBetweenAndIsopenIsTrue(maxDate,
-                LocalDate.now());
+        List<TradeCal> tradeCalList=new ArrayList<>();
+        if(daily!=null){
+            LocalDate maxDate = daily.getTradedate().getCaldate();
+            tradeCalList = jpaTradeCalRepository.findAllByCaldateBetweenAndIsopenIsTrue(maxDate,
+                    LocalDate.now());
+        }else{
+            tradeCalList=jpaTradeCalRepository.findAllByCaldateBeforeAndIsopenIsTrue(LocalDate.now());
+        }
         Spider spider = Spider.create(tuShareDailyPageProcessor).addPipeline(tuShareDailyPipeline);
         for (TradeCal tradeCal : tradeCalList) {
             Request request =
@@ -190,7 +183,12 @@ public class SpiderService {
     public void updateTop10FloatHolder() throws JsonProcessingException {
         log.info("刷新十大股东");
         FloatHolder floatHolder = jpaFloatHolderRepository.findFirstByOrderByAnndateDesc();
-        LocalDate maxDate = floatHolder.getAnndate().getCaldate().plusDays(1);
+        LocalDate maxDate;
+        if(floatHolder!=null){
+            maxDate = floatHolder.getAnndate().getCaldate().plusDays(1);
+        }else{
+            maxDate=jpaTradeCalRepository.findFirstByOrderByCaldate().getCaldate();
+        }
 //        Calendar calendar=new GregorianCalendar();
 //        calendar.setTimeInMillis(maxDate.getTime());
 //        calendar.add(Calendar.DATE,1);
@@ -211,7 +209,9 @@ public class SpiderService {
         log.info("刷新同花顺概念");
         log.info("1、刷新同花顺概念-清空数据库");
         //清空概念数据库
-        jpaConceptRepository.deleteAll();
+        //jpaConceptRepository.deleteAll();
+        //jpaConceptStocksRepository.mytruncate();
+        jpaConceptRepository.mytruncate();
         //刷新概念列表
         log.info("2、刷新同花顺概念-刷新概念列表");
         OOSpider.create(Site.me(), thsConceptsPipeline, THSConceptsModel.class).addUrl(

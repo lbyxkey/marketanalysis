@@ -20,8 +20,6 @@ import java.util.*;
 @Service
 @Slf4j
 public class LianBanComputeService {
-    @Autowired
-    JpaTmpFloatHolderLianBanRepository jpaTmpFloatHolderLianBanRepository;
 
     @Autowired
     JpaStockBasicRepository jpaStockBasicRepository;
@@ -58,13 +56,14 @@ public class LianBanComputeService {
     int years;
 
     public TradeCal getUpdateStartDate(){
-        LocalDate startDate=jpaLianBanStatisticsRepository.getStartComputeLianBan();
-        return jpaTradeCalRepository.findByCaldate(Objects.requireNonNullElseGet(startDate, () -> LocalDate.now().minusYears(years)));
+        //LocalDate startDate=jpaLianBanStatisticsRepository.getStartComputeLianBan();
+        return jpaTradeCalRepository.findByCaldate(LocalDate.now().minusYears(years));
     }
 
     public void deleteOldStatics(){
-        TradeCal tradeCal=jpaTradeCalRepository.findByCaldate(LocalDate.now().minusYears(years));
-        jpaLianBanStatisticsRepository.deleteByEnddateBefore(tradeCal);
+//        TradeCal tradeCal=jpaTradeCalRepository.findByCaldate(LocalDate.now().minusYears(years));
+//        jpaLianBanStatisticsRepository.deleteByEnddateBefore(tradeCal);
+        jpaLianBanStatisticsRepository.mytruncate();
     }
 
     public List<StockBasic> getStockList(){
@@ -83,7 +82,7 @@ public class LianBanComputeService {
         /**
          *
          * @param daily
-         * @param last
+         * @param last 是否是最后一个数据
          * @return
          */
         boolean isOver(Daily daily,boolean last){
@@ -126,21 +125,13 @@ public class LianBanComputeService {
             for(int j=0;j<dailies.size();j++){
                 Daily daily=dailies.get(j);
                 if(lbcounter.isOver(daily,j+1==dailies.size())){
-                    boolean isnew =false;
-                    LianBanStatistics lianBanStatistics=
-                            jpaLianBanStatisticsRepository.findLianBanStatisticsByStartdateEqualsAndSymbol(lbcounter.getStartDate(),stockBasic);
-                    if(lianBanStatistics==null){
-                        isnew=true;
-                        lianBanStatistics=new LianBanStatistics();
-                        lianBanStatistics.setSymbol(stockBasic);
-                        lianBanStatistics.setStartdate(lbcounter.getStartDate());
-                    }
+                    LianBanStatistics lianBanStatistics=new LianBanStatistics();
+                    lianBanStatistics.setSymbol(stockBasic);
+                    lianBanStatistics.setStartdate(lbcounter.getStartDate());
                     lianBanStatistics.setCount(lbcounter.getFinalcount());
                     lianBanStatistics.setEnddate(lbcounter.getEndDate());
                     jpaLianBanStatisticsRepository.save(lianBanStatistics);
-                    if(isnew){
-                        addLianBanHolderName(lianBanStatistics);
-                    }
+                    addLianBanHolderName(lianBanStatistics);
                 }
             }
             log.info(index+"/"+count+"计算连班 "+i+" 股票名"+stockBasic.getSymbol()+stockBasic.getName()+"完毕");
@@ -148,10 +139,11 @@ public class LianBanComputeService {
     }
 
     private  void addLianBanHolderName(LianBanStatistics lianBanStatistics){
-        LocalDate enddate=
-                jpaFloatHolderRepository.getDateByStockBasicAndDate(lianBanStatistics.getSymbol().getSymbol(),
-                        lianBanStatistics.getStartdate().getCaldate());
-        TradeCal endCal=jpaTradeCalRepository.findByCaldate(enddate);
+        Object enddateid=
+                jpaFloatHolderRepository.getDateByStockBasicAndDate(lianBanStatistics.getSymbol(),
+                        lianBanStatistics.getStartdate());
+        if(enddateid==null)return;
+        TradeCal endCal=jpaTradeCalRepository.findById((int)enddateid);
         List<FloatHolder> floatHolderList=
                 jpaFloatHolderRepository.findFloatHolderBySymbolAndEnddateEquals(lianBanStatistics.getSymbol(),endCal);
         for (FloatHolder floatHolder:floatHolderList) {

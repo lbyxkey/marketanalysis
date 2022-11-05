@@ -3,6 +3,11 @@ package indi.lby.marketanalysis.spider.pageprocessor;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import indi.lby.marketanalysis.entity.FloatHolder;
+import indi.lby.marketanalysis.entity.HolderList;
+import indi.lby.marketanalysis.entity.StockBasic;
+import indi.lby.marketanalysis.entity.TradeCal;
+import indi.lby.marketanalysis.repository.JpaFloatHolderRepository;
+import indi.lby.marketanalysis.repository.JpaHolderListRepository;
 import indi.lby.marketanalysis.repository.JpaStockBasicRepository;
 import indi.lby.marketanalysis.repository.JpaTradeCalRepository;
 import indi.lby.marketanalysis.spider.service.TuShareJsonMakerService;
@@ -31,7 +36,7 @@ public class TuShareFloatHolderPageProcessor implements PageProcessor {
 
     @Autowired
     JpaStockBasicRepository jpaStockBasicRepository;
-    private Site site = Site.me().setRetryTimes(3).setSleepTime(6000).setDomain("api.tushare.pro").setCharset("utf-8");
+    private Site site = Site.me().setRetryTimes(10).setSleepTime(6000).setDomain("api.tushare.pro").setCharset("utf-8").setTimeOut(30000);
 
     @Autowired
     TuShareJsonMakerService tuShareJsonMakerService;
@@ -40,11 +45,18 @@ public class TuShareFloatHolderPageProcessor implements PageProcessor {
     DateTimeFormatter dateTimeFormatter;
     @Autowired
     JpaTradeCalRepository jpaTradeCalRepository;
+
+
     @Value("${tushare.dateformat}")
     public void setDateTimeFormatter(String dateformat){
         dateTimeFormatter=DateTimeFormatter.ofPattern(dateformat);
     }
 
+    @Autowired
+    JpaHolderListRepository jpaHolderListRepository;
+
+    @Autowired
+    JpaFloatHolderRepository jpaFloatHolderRepository;
     @SneakyThrows
     @Override
     public void process(Page page) {
@@ -56,23 +68,41 @@ public class TuShareFloatHolderPageProcessor implements PageProcessor {
             ArrayList<ArrayList<Object>> items=readContext.read("$.data.items.*");
             ArrayList<FloatHolder> floatHolderArrayList=new ArrayList<>();
             for (ArrayList<Object> item:items) {
-                FloatHolder floatHolder=new FloatHolder();
-                floatHolder.setSymbol(jpaStockBasicRepository.findStockBasicByTscode(item.get(fields.indexOf("ts_code")).toString()));
-                floatHolder.setHoldername(item.get(fields.indexOf("holder_name")).toString());
-                Double hold_amount=(double)item.get(fields.indexOf("hold_amount"));
+                StockBasic symbol=
+                        jpaStockBasicRepository.findStockBasicByTscode(item.get(fields.indexOf("ts_code")).toString());
+                if(symbol==null)continue;
+                String holdername=item.get(fields.indexOf("holder_name")).toString();
+                HolderList holderList=jpaHolderListRepository.findHolderListByHoldername(holdername);
+                if(holderList==null){
+                    holderList=new HolderList();
+                    holderList.setHoldername(holdername);
+                    jpaHolderListRepository.save(holderList);
+                }
+                HolderList newholderList=jpaHolderListRepository.findHolderListByHoldername(holdername);
+                TradeCal endDate=jpaTradeCalRepository.findByCaldate(LocalDate.parse(item.get(fields.indexOf("end_date")).toString(),
+                        dateTimeFormatter));
+                FloatHolder floatHolder=
+                        jpaFloatHolderRepository.findFloatHolderBySymbolAndEnddateAndHoldername(symbol,endDate,
+                                newholderList);
+                if(floatHolder!=null){
+                    continue;
+                }
+                floatHolder=new FloatHolder();
+                floatHolder.setSymbol(symbol);
+                floatHolder.setHoldername(newholderList);
+                floatHolder.setEnddate(endDate);
+                Double hold_amount=(Double)item.get(fields.indexOf("hold_amount"));
                 floatHolder.setHoldamount(hold_amount.longValue());
                 floatHolder.setAnndate(jpaTradeCalRepository.findByCaldate(LocalDate.parse(item.get(fields.indexOf("ann_date")).toString(),
-                        dateTimeFormatter)));
-                floatHolder.setEnddate(jpaTradeCalRepository.findByCaldate(LocalDate.parse(item.get(fields.indexOf("end_date")).toString(),
                         dateTimeFormatter)));
                 floatHolderArrayList.add(floatHolder);
             }
             if(!floatHolderArrayList.isEmpty()){
                 page.putField("items",floatHolderArrayList);
             }
-            boolean hasnext=readContext.read("$.data.has_more");
-            if(hasnext){
-                offset+=floatHolderArrayList.size();
+            //boolean hasnext=readContext.read("$.data.has_more");
+            if(items.size()==5000){
+                offset+=items.size();
                 Request request=tuShareJsonMakerService.getRequest(tuShareJsonMakerService.getFloatHolderJson(maxdate
                         ,offset));
                 page.addTargetRequest(request);

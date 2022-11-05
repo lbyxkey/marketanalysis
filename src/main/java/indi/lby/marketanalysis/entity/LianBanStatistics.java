@@ -13,7 +13,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="lianbanstatistics",uniqueConstraints = @UniqueConstraint(columnNames = {"symbol","startdate"}))
+@Table(name="lianbanstatistics",uniqueConstraints = @UniqueConstraint(columnNames = {"stockid","startdate"}))
 public class LianBanStatistics {
     @Id
     @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -21,14 +21,14 @@ public class LianBanStatistics {
     int id;
 
     @ManyToOne
-    @JoinColumn(name = "symbol",referencedColumnName = "symbol")
+    @JoinColumn(name = "stockid",referencedColumnName = "id")
     StockBasic symbol;
 
     @ManyToOne
-    @JoinColumn(name = "startdate",referencedColumnName = "caldate")
+    @JoinColumn(name = "startdate",referencedColumnName = "id")
     TradeCal startdate;
     @ManyToOne
-    @JoinColumn(name = "enddate",referencedColumnName = "caldate")
+    @JoinColumn(name = "enddate",referencedColumnName = "id")
     TradeCal enddate;
     int count;
 }

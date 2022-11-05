@@ -31,7 +31,7 @@ public class THSConceptStockPageProcessor implements PageProcessor {
     @Autowired
     THSCookie thsCookie;
     // 部分一：抓取网站的相关配置，包括编码、抓取间隔、重试次数等
-    private Site site = Site.me().setRetryTimes(3).setSleepTime(500).setDomain("q.10jqka.com.cn");
+    private final Site site = Site.me().setRetryTimes(3).setSleepTime(500).setDomain("q.10jqka.com.cn");
     Pattern pattern6=Pattern.compile("/(\\w+)$");
     Pattern patternPageinfo=Pattern.compile("(\\d+)/(\\d+)");
     @Override
@@ -48,7 +48,9 @@ public class THSConceptStockPageProcessor implements PageProcessor {
             for (String code:codeList) {
                 StockBasic stockBasic= jpaStockBasicRepository.findStockBasicBySymbol(code);
                 if(stockBasic!=null){
-                    ConceptStocks conceptStocks=new ConceptStocks(concept,stockBasic);
+                    ConceptStocks conceptStocks=new ConceptStocks();
+                    conceptStocks.setConcept(concept);
+                    conceptStocks.setStockBasic(stockBasic);
                     conceptStocksList.add(conceptStocks);
                 }
             }

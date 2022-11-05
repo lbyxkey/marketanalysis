@@ -54,7 +54,10 @@ public class THSConceptsPipeline implements PageModelPipeline {
     }
 
     void writeToDb(String name,ConceptType shortid,String code){
-        Concept concept=new Concept(shortid,code,name);
+        Concept concept=new Concept();
+        concept.setConceptType(shortid);
+        concept.setCode(code);
+        concept.setName(name);
         jpaConceptRepository.save(concept);
     }
 }

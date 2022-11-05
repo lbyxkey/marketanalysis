@@ -17,12 +17,17 @@ import java.util.Objects;
 @AllArgsConstructor
 @Table(name = "stockbasic")
 public class StockBasic implements Serializable {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
 
     private String tscode;
     private String name;
     private String market;
-    private Date listdate;
-    @Id
+    @ManyToOne
+    @JoinColumn(name = "listdate",referencedColumnName = "id")
+    private TradeCal listdate;
     private String symbol;
 
     @Override

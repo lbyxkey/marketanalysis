@@ -11,6 +11,7 @@ import us.codecraft.webmagic.ResultItems;
 import us.codecraft.webmagic.Task;
 import us.codecraft.webmagic.pipeline.Pipeline;
 
+import java.util.HashSet;
 import java.util.List;
 
 @Component
@@ -24,8 +25,8 @@ public class TuShareDailyPipeline implements Pipeline {
     @Override
     public void process(ResultItems resultItems, Task task) {
         List<Daily> dailies=resultItems.get("items");
-        if(dailies!=null){
-            log.info("写入日线:"+dailies.size());
+        if(dailies!=null&&dailies.size()>0){
+            log.info("写入日线:"+dailies.get(0).getTradedate().getCaldate()+" 个数:"+dailies.size());
             jpaDailyRepository.saveAll(dailies);
         }
     }

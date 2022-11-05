@@ -5,6 +5,7 @@ import indi.lby.marketanalysis.service.SpiderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
@@ -17,34 +18,52 @@ public class SpiderController {
     @Autowired
     SpiderService spiderService;
 
+    @Autowired
+    PreComputeController preComputeController;
+
     @PostConstruct
     public void runOnStart() throws JsonProcessingException {
         spiderService.runOnStart();
     }
 
+    @Async
     @Scheduled(cron = "0 0 0 * * ?")
     public void updateCal() throws JsonProcessingException{
         spiderService.updateCal();
     }
 
+    @Async
     @Scheduled(cron = "0 0 16 * * 1-5")
-    public void updateStockBasic() throws JsonProcessingException {
+    public void doAfterNoon() throws JsonProcessingException {
         spiderService.updateStockBasic();
-    }
-
-    @Scheduled(cron = "0 5 16 * * 1-5")
-    public void updateDaily() throws JsonProcessingException {
         spiderService.updateDaily();
     }
 
+//    @Scheduled(cron = "0 0 16 * * 1-5")
+//    public void updateStockBasic() throws JsonProcessingException {
+//        spiderService.updateStockBasic();
+//    }
+//
+//    @Scheduled(cron = "0 5 16 * * 1-5")
+//    public void updateDaily() throws JsonProcessingException {
+//        spiderService.updateDaily();
+//    }
+    @Async
     @Scheduled(cron = "0 0 2 * * ?")
-    public void updateTop10FloatHolder() throws JsonProcessingException {
-        spiderService.updateTop10FloatHolder();
-    }
-    @Scheduled(cron = "0 0 2 * * ?")
-    public void updateTHSConcept(){
+    public void doNight() throws JsonProcessingException {
         spiderService.updateTHSConcept();
+        spiderService.updateTop10FloatHolder();
+        preComputeController.computeLianBanStatistics();
     }
+
+//    @Scheduled(cron = "0 0 2 * * ?")
+//    public void updateTop10FloatHolder() throws JsonProcessingException {
+//        spiderService.updateTop10FloatHolder();
+//    }
+//    @Scheduled(cron = "0 0 2 * * ?")
+//    public void updateTHSConcept(){
+//        spiderService.updateTHSConcept();
+//    }
 
     /**
      * 周一到五早上9点30发动早盘刷新
@@ -70,7 +89,7 @@ public class SpiderController {
     /**
      * 周一到五下午1点发动下午盘刷新
      */
-    @Scheduled(cron = "*/3 0 13-15 * * 1-5")
+    @Scheduled(cron = "*/3 * 13-15 * * 1-5")
     public void updateEastMoneyPriceAfterNoon(){
         spiderService.updateEastMoneyPrice();
     }

@@ -1,6 +1,9 @@
 package indi.lby.marketanalysis.service;
 
 
+import indi.lby.marketanalysis.entity.Concept;
+import indi.lby.marketanalysis.entity.ConceptStocks;
+import indi.lby.marketanalysis.entity.TradeCal;
 import indi.lby.marketanalysis.projections.ConceptConceptsProjection;
 import indi.lby.marketanalysis.projections.ConceptStocksProjection;
 import indi.lby.marketanalysis.projections.ConceptTypeShowProjection;
@@ -42,7 +45,10 @@ public class ConceptService {
     }
 
     public LinkedHashMap<LocalDate,Double> getAmountPercent(String conceptcode, LocalDate startdate, LocalDate enddate){
-        List<Map<String,Object>> amount= jpaDailyRepository.getConceptAmount(conceptcode,startdate,enddate);
+        TradeCal startdateCal=jpaTradeCalRepository.findByCaldate(startdate);
+        TradeCal enddateCal=jpaTradeCalRepository.findByCaldate(enddate);
+        Concept concept=jpaConceptRepository.findConceptByCode(conceptcode);
+        List<Map<String,Object>> amount= jpaDailyRepository.getConceptAmount(concept,startdateCal,enddateCal);
         List<Map<String,Object>> amountall= jpaDailyRepository.getAmountAll(startdate,enddate);
         LinkedHashMap<LocalDate,Double> result=new LinkedHashMap<>();
         for (int i = 0; i < amount.size(); i++) {

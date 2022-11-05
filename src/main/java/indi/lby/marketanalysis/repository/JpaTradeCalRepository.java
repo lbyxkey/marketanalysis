@@ -9,10 +9,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface JpaTradeCalRepository extends JpaRepository<TradeCal, Date> {
+public interface JpaTradeCalRepository extends JpaRepository<TradeCal, Integer> {
     TradeCal findTopByOrderByCaldateDesc();
 
     List<TradeCal> findAllByCaldateBetweenAndIsopenIsTrue(LocalDate startDate, LocalDate endDate);
 
+    List<TradeCal> findAllByCaldateBeforeAndIsopenIsTrue(LocalDate endDate);
     TradeCal findByCaldate(LocalDate caldate);
+
+    TradeCal findFirstByOrderByCaldate();
+
+    TradeCal findById(int id);
 }

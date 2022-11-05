@@ -12,15 +12,18 @@ import javax.persistence.*;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@IdClass(ConceptStocksUPK.class)
 public class ConceptStocks {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id", nullable = false)
+    private Integer id;
+
     @ManyToOne
-    @JoinColumn(name = "conceptcode",referencedColumnName = "code")
+    @JoinColumn(name = "conceptid",referencedColumnName = "id")
     private Concept concept;
 
-    @Id
+
     @ManyToOne
-    @JoinColumn(name = "symbol",referencedColumnName = "symbol")
+    @JoinColumn(name = "stockid",referencedColumnName = "id")
     private StockBasic stockBasic;
 }

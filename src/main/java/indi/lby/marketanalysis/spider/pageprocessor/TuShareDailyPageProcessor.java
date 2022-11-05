@@ -3,7 +3,9 @@ package indi.lby.marketanalysis.spider.pageprocessor;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.ReadContext;
 import indi.lby.marketanalysis.entity.Daily;
+import indi.lby.marketanalysis.entity.StockBasic;
 import indi.lby.marketanalysis.entity.TradeCal;
+import indi.lby.marketanalysis.repository.JpaDailyRepository;
 import indi.lby.marketanalysis.repository.JpaStockBasicRepository;
 import indi.lby.marketanalysis.repository.JpaTradeCalRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -26,12 +28,16 @@ import java.util.ArrayList;
 @ConditionalOnProperty(name = "function.datamantance")
 public class TuShareDailyPageProcessor implements PageProcessor {
 
-    private Site site = Site.me().setRetryTimes(3).setSleepTime(500).setDomain("api.tushare.pro").setCharset("utf-8");
+    private Site site =
+            Site.me().setRetryTimes(3).setSleepTime(120).setDomain("api.tushare.pro").setCharset("utf-8").setTimeOut(10000);
     @Autowired
     JpaStockBasicRepository jpaStockBasicRepository;
 
     @Autowired
     JpaTradeCalRepository jpaTradeCalRepository;
+
+    @Autowired
+    JpaDailyRepository jpaDailyRepository;
     DateTimeFormatter dateTimeFormatter;
     @Value("${tushare.dateformat}")
     public void setDateTimeFormatter(String dateformat){
@@ -42,16 +48,27 @@ public class TuShareDailyPageProcessor implements PageProcessor {
     public void process(Page page) {
         ReadContext readContext=JsonPath.parse(page.getJson().toString());
         int code=readContext.read("$.code");
+        ArrayList<String> wrongList=new ArrayList<>();
+        ArrayList<String> wrongamountList=new ArrayList<>();
         if(code==0){
             ArrayList<String> fields=readContext.read("$.data.fields");
             ArrayList<ArrayList<Object>> items=readContext.read("$.data.items.*");
             ArrayList<Daily> dailyArrayList=new ArrayList<>();
             for (ArrayList<Object> item:items) {
-                Daily daily=new Daily();
-                daily.setSymbol(jpaStockBasicRepository.findStockBasicByTscode(item.get(fields.indexOf("ts_code")).toString()));
+                String symbolStr=item.get(fields.indexOf("ts_code")).toString();
+                StockBasic symbol=
+                        jpaStockBasicRepository.findStockBasicByTscode(symbolStr);
+                if(symbol==null) {
+                    wrongList.add(symbolStr);
+                    continue;
+                }
                 LocalDate date=LocalDate.parse(item.get(fields.indexOf("trade_date")).toString(),
                         dateTimeFormatter);
                 TradeCal tradeCal= jpaTradeCalRepository.findByCaldate(date);
+                Daily daily=jpaDailyRepository.findBySymbolAndTradedate(symbol,tradeCal);
+                if(daily!=null)continue;
+                daily=new Daily();
+                daily.setSymbol(symbol);
                 daily.setTradedate(tradeCal);
                 daily.setOpen((Double) item.get(fields.indexOf("open")));
                 daily.setHigh((Double) item.get(fields.indexOf("high")));
@@ -61,9 +78,17 @@ public class TuShareDailyPageProcessor implements PageProcessor {
                 daily.setChange((Double) item.get(fields.indexOf("change")));
                 daily.setPctchg((Double) item.get(fields.indexOf("pct_chg")));
                 daily.setVol((Double) item.get(fields.indexOf("vol")));
-                daily.setAmount((Double) item.get(fields.indexOf("amount")));
+                Object amountObject=item.get(fields.indexOf("amount"));
+                if(amountObject==null){
+                    wrongamountList.add(symbolStr);
+                    continue;
+                }
+                daily.setAmount((Double) amountObject);
                 dailyArrayList.add(daily);
             }
+            log.warn("wrong symbol :"+wrongList);
+            log.warn("wrong amount:"+wrongamountList);
+            log.warn("write to DB:"+dailyArrayList.size());
             page.putField("items",dailyArrayList);
             //boolean hasnext=readContext.read("$.data.has_more");
         }else{

@@ -14,7 +14,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="floatholder",uniqueConstraints = @UniqueConstraint(columnNames = {"symbol","anndate","enddate","holdername"}))
+@Table(name="floatholder",uniqueConstraints = @UniqueConstraint(columnNames = {"stockid","enddate","holderid"}))
 public class FloatHolder {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -22,18 +22,20 @@ public class FloatHolder {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "symbol",referencedColumnName = "symbol")
+    @JoinColumn(name = "stockid",referencedColumnName = "id")
     private StockBasic symbol;
 
     @ManyToOne
-    @JoinColumn(name = "anndate",referencedColumnName = "caldate")
+    @JoinColumn(name = "anndate",referencedColumnName = "id")
     private TradeCal anndate;
 
     @ManyToOne
-    @JoinColumn(name = "enddate",referencedColumnName = "caldate")
+    @JoinColumn(name = "enddate",referencedColumnName = "id")
     private TradeCal enddate;
 
-    private String holdername;
+    @ManyToOne
+    @JoinColumn(name = "holderid",referencedColumnName = "id")
+    private HolderList holdername;
 
     private long holdamount;
 }

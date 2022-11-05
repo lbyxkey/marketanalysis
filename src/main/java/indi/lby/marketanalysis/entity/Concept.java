@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.util.List;
 
 @Entity
 @Setter
@@ -15,12 +16,19 @@ import java.io.Serializable;
 @AllArgsConstructor
 @Table(name="concept")
 public class Concept{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    private List<ConceptStocks> conceptStocksList;
 
     @ManyToOne
     @JoinColumn(name = "type",referencedColumnName = "type")
     private ConceptType conceptType;
     //private Integer type;
-    @Id
+
     private String code;
 
     private String name;

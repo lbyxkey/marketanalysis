@@ -60,10 +60,10 @@ public class TuShareJsonMakerService {
         return objectMapper.writeValueAsString(dailyJsonTemplete);
     }
 
-    public String getFloatHolderJson(@NonNull LocalDate anndate,int offset) throws JsonProcessingException {
+    public String getFloatHolderJson(@NonNull LocalDate startDate,int offset) throws JsonProcessingException {
         FloatHolderJsonTemplete floatHolderJsonTemplete=new FloatHolderJsonTemplete();
         floatHolderJsonTemplete.setToken(token);
-        floatHolderJsonTemplete.getParams().setAnn_date(dateTimeFormatter.format(anndate));
+        floatHolderJsonTemplete.getParams().setStart_date(dateTimeFormatter.format(startDate));
         floatHolderJsonTemplete.getParams().setOffset(String.valueOf(offset));
         return objectMapper.writeValueAsString(floatHolderJsonTemplete);
     }
