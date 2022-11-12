@@ -31,6 +31,7 @@ public class TuShareStockBasicPipeline implements Pipeline {
 //        HashSet<StockBasic> needDelete=new HashSet<>(dbStockBasicSet);
 //        needDelete.removeAll(stockBasicSet);
 //        log.info(needDelete.toString());
+        if(stockBasics==null)return;
         log.info("刷新股票列表-股票数量:"+stockBasics.size());
         jpaStockBasicRepository.saveAll(stockBasics);
     }

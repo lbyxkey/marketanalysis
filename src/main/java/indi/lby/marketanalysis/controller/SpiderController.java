@@ -1,6 +1,7 @@
 package indi.lby.marketanalysis.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import indi.lby.marketanalysis.service.PriceService;
 import indi.lby.marketanalysis.service.SpiderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,11 +33,15 @@ public class SpiderController {
         spiderService.updateCal();
     }
 
+    @Autowired
+    PriceService priceService;
     @Async
     @Scheduled(cron = "0 0 16 * * 1-5")
     public void doAfterNoon() throws JsonProcessingException {
         spiderService.updateStockBasic();
         spiderService.updateDaily();
+        priceService.initStockBasicList();
+        //priceService.initPriceCache();
     }
 
 //    @Scheduled(cron = "0 0 16 * * 1-5")
@@ -89,10 +94,14 @@ public class SpiderController {
     /**
      * 周一到五下午1点发动下午盘刷新
      */
-    @Scheduled(cron = "*/3 * 13-15 * * 1-5")
-    public void updateEastMoneyPriceAfterNoon(){
+    @Scheduled(cron = "*/3 * 13-14 * * 1-5")
+    public void updateEastMoneyPriceAfterNoon1(){
         spiderService.updateEastMoneyPrice();
     }
 
+    @Scheduled(cron = "0 0 15 * * 1-5")
+    public void updateEastMoneyPriceAfterNoon2(){
+        spiderService.updateEastMoneyPrice();
+    }
 
 }

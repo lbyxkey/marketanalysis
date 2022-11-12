@@ -14,8 +14,8 @@ import java.util.List;
 public interface JpaConceptRepository extends JpaRepository<Concept, Integer> {
     List<ConceptConceptsProjection> findAllByOrderByName();
 
-
     Concept findConceptByCode(String code);
+
 
     @Transactional
     @Modifying

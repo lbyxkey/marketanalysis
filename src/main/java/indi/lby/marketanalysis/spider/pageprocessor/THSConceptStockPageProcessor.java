@@ -4,6 +4,7 @@ import indi.lby.marketanalysis.entity.Concept;
 import indi.lby.marketanalysis.entity.ConceptStocks;
 import indi.lby.marketanalysis.entity.StockBasic;
 import indi.lby.marketanalysis.repository.JpaConceptRepository;
+import indi.lby.marketanalysis.repository.JpaConceptStocksRepository;
 import indi.lby.marketanalysis.repository.JpaStockBasicRepository;
 import indi.lby.marketanalysis.tools.THSCookie;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,9 @@ public class THSConceptStockPageProcessor implements PageProcessor {
     JpaConceptRepository jpaConceptRepository;
     @Autowired
     JpaStockBasicRepository jpaStockBasicRepository;
+
+    @Autowired
+    JpaConceptStocksRepository jpaConceptStocksRepository;
     @Autowired
     THSCookie thsCookie;
     // 部分一：抓取网站的相关配置，包括编码、抓取间隔、重试次数等
@@ -48,7 +52,9 @@ public class THSConceptStockPageProcessor implements PageProcessor {
             for (String code:codeList) {
                 StockBasic stockBasic= jpaStockBasicRepository.findStockBasicBySymbol(code);
                 if(stockBasic!=null){
-                    ConceptStocks conceptStocks=new ConceptStocks();
+                    ConceptStocks conceptStocks=
+                            jpaConceptStocksRepository.findConceptStocksByConceptAndStockBasic(concept,stockBasic);
+                    if(conceptStocks==null)conceptStocks=new ConceptStocks();
                     conceptStocks.setConcept(concept);
                     conceptStocks.setStockBasic(stockBasic);
                     conceptStocksList.add(conceptStocks);

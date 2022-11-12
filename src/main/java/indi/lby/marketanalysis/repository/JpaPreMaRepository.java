@@ -1,9 +1,12 @@
 package indi.lby.marketanalysis.repository;
 
-import indi.lby.marketanalysis.entity.UserToken;
+
+import indi.lby.marketanalysis.entity.PreMa;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+
 @Repository
-public interface JpaUserTokenRepository extends JpaRepository<UserToken,Integer> {
+public interface JpaPreMaRepository extends JpaRepository<PreMa, Integer> {
+
 }

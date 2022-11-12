@@ -21,6 +21,10 @@ public class EastMoneyFastPriceModel implements Serializable {
     int open;
     @ExtractBy(value = "$.data.f48",type = ExtractBy.Type.JsonPath)
     String amount;
+    @ExtractBy(value = "$.data.f51",type = ExtractBy.Type.JsonPath)
+    int limitup;
+    @ExtractBy(value = "$.data.f52",type = ExtractBy.Type.JsonPath)
+    int limitdown;
     @Id
     @Indexed
     @ExtractBy(value = "$.data.f57",type = ExtractBy.Type.JsonPath)

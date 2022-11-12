@@ -30,11 +30,13 @@ public interface JpaDailyRepository extends JpaRepository<Daily, Long> {
     @Transactional
     @Query(value = "SELECT tradedate,sum(amount) FROM daily WHERE tradedate BETWEEN ?1 AND ?2  GROUP BY tradedate  ORDER BY tradedate",
             nativeQuery = true)
-    List<Map<String,Object>> getAmountAll(LocalDate startDate, LocalDate endDate);
+    List<Map<String,Object>> getAmountAll(TradeCal startDate,TradeCal endDate);
 
     Daily findFirstByOrderByTradedateDesc();
 
     List<Daily> findDailiesBySymbolAndTradedateAfterOrderByTradedateAsc(StockBasic symbol, TradeCal tradeCal);
 
     Daily findBySymbolAndTradedate(StockBasic symbol,TradeCal tradeCal);
+
+    List<Daily> findAllByTradedate(TradeCal tradeCal);
 }

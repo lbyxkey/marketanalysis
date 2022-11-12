@@ -22,6 +22,7 @@ public class Concept{
     private Integer id;
 
     @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL)
+    @JoinColumn(name ="conceptid")
     private List<ConceptStocks> conceptStocksList;
 
     @ManyToOne

@@ -1,6 +1,8 @@
 package indi.lby.marketanalysis.repository;
 
+import indi.lby.marketanalysis.entity.Concept;
 import indi.lby.marketanalysis.entity.ConceptStocks;
+import indi.lby.marketanalysis.entity.StockBasic;
 import indi.lby.marketanalysis.projections.ConceptStocksProjection;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -13,10 +15,13 @@ import java.util.List;
 
 @Repository
 public interface JpaConceptStocksRepository extends JpaRepository<ConceptStocks, Integer> {
-    public List<ConceptStocksProjection> findByConceptCode(@Param("code") String code);
+    List<ConceptStocksProjection> findByConceptCode(@Param("code") String code);
 
-    @Transactional
     @Modifying
     @Query(value = "TRUNCATE conceptstocks RESTART IDENTITY ",nativeQuery =true)
     void mytruncate();
+
+    List<ConceptStocks> findAllByStockBasic(StockBasic stockBasic);
+
+    ConceptStocks findConceptStocksByConceptAndStockBasic(Concept concept,StockBasic stockBasic);
 }

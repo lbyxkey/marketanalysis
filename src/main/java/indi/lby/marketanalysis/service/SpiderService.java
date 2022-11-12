@@ -209,8 +209,6 @@ public class SpiderService {
         log.info("刷新同花顺概念");
         log.info("1、刷新同花顺概念-清空数据库");
         //清空概念数据库
-        //jpaConceptRepository.deleteAll();
-        //jpaConceptStocksRepository.mytruncate();
         jpaConceptRepository.mytruncate();
         //刷新概念列表
         log.info("2、刷新同花顺概念-刷新概念列表");
@@ -270,12 +268,12 @@ public class SpiderService {
             if (symbol.startsWith("6"))
                 prefix = "1";
             String url =
-                    "http://push2.eastmoney.com/api/qt/stock/get?fields=f43,f44,f45,f46,f48,f57,f58&secid="+prefix+"."+symbol;
+                    "http://push2.eastmoney.com/api/qt/stock/get?fields=f43,f44,f45,f46,f48,f51,f52,f57,f58&secid="+prefix+"."+symbol;
             spider.addUrl(url);
         }
         spider.run();
         stopWatch.stop();
         setSpiderRunningState(false);
-        log.info("总数量"+spider.getPageCount()+"/"+stockBasicList.size()+"个，总运行时间"+stopWatch.getTotalTimeSeconds()+"秒");
+        log.info("EastMoney总数量"+spider.getPageCount()+"/"+stockBasicList.size()+"个，总运行时间"+stopWatch.getTotalTimeSeconds()+"秒");
     }
 }

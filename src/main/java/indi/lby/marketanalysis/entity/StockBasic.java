@@ -1,12 +1,12 @@
 package indi.lby.marketanalysis.entity;
 
-import lombok.*;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
-import java.sql.Date;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +29,10 @@ public class StockBasic implements Serializable {
     @JoinColumn(name = "listdate",referencedColumnName = "id")
     private TradeCal listdate;
     private String symbol;
+
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.DETACH)
+    @JoinColumn(name ="stockid")
+    private List<ConceptStocks> conceptStocksList;
 
     @Override
     public boolean equals(Object o){
