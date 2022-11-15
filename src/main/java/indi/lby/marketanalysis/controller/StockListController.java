@@ -2,6 +2,8 @@ package indi.lby.marketanalysis.controller;
 
 
 import indi.lby.marketanalysis.projections.StocksSymbolAndName;
+import indi.lby.marketanalysis.projections.SymbolAndAmount;
+import indi.lby.marketanalysis.projections.SymbolAndTime;
 import indi.lby.marketanalysis.service.PriceService;
 import indi.lby.marketanalysis.service.StockBasicService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,9 +39,9 @@ public class StockListController {
      */
     @GetMapping("/limitup")
     @ResponseBody
-    public List<String> stocksLimitUp(){
-        priceService.computePriceCache();
-        return priceService.getLimitUp();
+    public List<SymbolAndTime> stocksLimitUp(){
+        //priceService.computePriceCache();
+        return priceService.getLimitUpStocksCache();
     }
 
     /**
@@ -48,9 +50,9 @@ public class StockListController {
      */
     @GetMapping("/limitupbreak")
     @ResponseBody
-    public List<String> stocksLimitUpBreak(){
-        priceService.computePriceCache();
-        return priceService.getLimitUpBreak();
+    public List<SymbolAndTime> stocksLimitUpBreak(){
+        //priceService.computePriceCache();
+        return priceService.getLimitUpBreakStocksCache();
     }
 
     /**
@@ -59,9 +61,9 @@ public class StockListController {
      */
     @GetMapping("/limitdown")
     @ResponseBody
-    public List<String> stocksLimitDown(){
-        priceService.computePriceCache();
-        return priceService.getLimitDown();
+    public List<SymbolAndTime> stocksLimitDown(){
+        //priceService.computePriceCache();
+        return priceService.getLimitDownStocksCache();
     }
 
     /**
@@ -70,8 +72,15 @@ public class StockListController {
      */
     @GetMapping("/limitdownbreak")
     @ResponseBody
-    public List<String> stocksLimitDownBreak(){
-        priceService.computePriceCache();
-        return priceService.getLimitDownBreak();
+    public List<SymbolAndTime> stocksLimitDownBreak(){
+        //priceService.computePriceCache();
+        return priceService.getLimitDownBreakStocksCache();
+    }
+
+    @GetMapping("/fast5")
+    @ResponseBody
+    public List<SymbolAndAmount> fast5(){
+        //priceService.computePriceCache();
+        return priceService.getFast5StocksCache();//fast5StocksCache
     }
 }

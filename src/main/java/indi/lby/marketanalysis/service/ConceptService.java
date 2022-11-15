@@ -73,7 +73,7 @@ public class ConceptService {
         if(stockBasic==null)return result;
         List<ConceptStocks> conceptStocksList=stockBasic.getConceptStocksList();
         for(ConceptStocks conceptStocks:conceptStocksList){
-            result.add(conceptStocks.getConcept().getName());
+            result.add(conceptStocks.getConcept().getCode());
         }
         return result;
     }

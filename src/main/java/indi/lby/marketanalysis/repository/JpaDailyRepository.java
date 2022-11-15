@@ -34,6 +34,8 @@ public interface JpaDailyRepository extends JpaRepository<Daily, Long> {
 
     Daily findFirstByOrderByTradedateDesc();
 
+    Daily  findFirstBySymbolOrderByTradedateDesc(StockBasic stockBasic);
+
     List<Daily> findDailiesBySymbolAndTradedateAfterOrderByTradedateAsc(StockBasic symbol, TradeCal tradeCal);
 
     Daily findBySymbolAndTradedate(StockBasic symbol,TradeCal tradeCal);

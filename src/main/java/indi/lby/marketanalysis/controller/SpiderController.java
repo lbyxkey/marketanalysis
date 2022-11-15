@@ -1,6 +1,8 @@
 package indi.lby.marketanalysis.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import indi.lby.marketanalysis.entity.TradeCal;
+import indi.lby.marketanalysis.repository.JpaTradeCalRepository;
 import indi.lby.marketanalysis.service.PriceService;
 import indi.lby.marketanalysis.service.SpiderService;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
 
 import javax.annotation.PostConstruct;
+import java.time.LocalDate;
 
 @Slf4j
 @Controller
@@ -69,12 +72,17 @@ public class SpiderController {
 //    public void updateTHSConcept(){
 //        spiderService.updateTHSConcept();
 //    }
-
+    @Autowired
+    JpaTradeCalRepository jpaTradeCalRepository;
     /**
      * 周一到五早上9点30发动早盘刷新
      */
     @Scheduled(cron = "0 25 9 * * 1-5")
     public void updateEastMoneyPriceForeNoon0(){
+        TradeCal tradeCal=jpaTradeCalRepository.findByCaldate(LocalDate.now());
+        if(tradeCal.isIsopen()){
+            priceService.newDayStart();
+        }
         spiderService.updateEastMoneyPrice();
     }
 

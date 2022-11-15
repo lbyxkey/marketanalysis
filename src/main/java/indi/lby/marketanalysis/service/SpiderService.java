@@ -106,16 +106,16 @@ public class SpiderService {
         updateStockBasic();
         updateDaily();
         //如果上次距离本次时间大于24小时，刷新
-        LocalDateTime now=LocalDateTime.now();
-        String conceptUpdateDatetimeStr=stringRedisTemplate.opsForValue().get(conceptUpdateDatetimeName);
-        if(conceptUpdateDatetimeStr!=null){
-            LocalDateTime conceptUpdateDatetime=LocalDateTime.parse(conceptUpdateDatetimeStr);
-            if(Duration.between(conceptUpdateDatetime,now).toHours()>=24){
-                updateTHSConcept();
-            }
-        }else{
-            updateTHSConcept();
-        }
+//        LocalDateTime now=LocalDateTime.now();
+//        String conceptUpdateDatetimeStr=stringRedisTemplate.opsForValue().get(conceptUpdateDatetimeName);
+//        if(conceptUpdateDatetimeStr!=null){
+//            LocalDateTime conceptUpdateDatetime=LocalDateTime.parse(conceptUpdateDatetimeStr);
+//            if(Duration.between(conceptUpdateDatetime,now).toHours()>=24){
+//                updateTHSConcept();
+//            }
+//        }else{
+//            updateTHSConcept();
+//        }
         updateTop10FloatHolder();
         updateEastMoneyPriceCore();
     }
@@ -250,6 +250,9 @@ public class SpiderService {
             updateEastMoneyPriceCore();
         }
     }
+
+    @Autowired
+    PriceService priceService;
     private void updateEastMoneyPriceCore(){
         //判断股票列表非空
         if(stockBasicList==null){
@@ -268,11 +271,13 @@ public class SpiderService {
             if (symbol.startsWith("6"))
                 prefix = "1";
             String url =
-                    "http://push2.eastmoney.com/api/qt/stock/get?fields=f43,f44,f45,f46,f48,f51,f52,f57,f58&secid="+prefix+"."+symbol;
+                    "http://push2.eastmoney.com/api/qt/stock/get?fields=f43,f44,f45,f46,f48,f51,f52,f57,f58,f60&secid="+prefix+"."+symbol;
             spider.addUrl(url);
         }
         spider.run();
         stopWatch.stop();
+        priceService.computePriceCache();
+        priceService.computeResultCache();
         setSpiderRunningState(false);
         log.info("EastMoney总数量"+spider.getPageCount()+"/"+stockBasicList.size()+"个，总运行时间"+stopWatch.getTotalTimeSeconds()+"秒");
     }

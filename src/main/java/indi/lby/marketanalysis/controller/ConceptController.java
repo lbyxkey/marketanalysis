@@ -60,25 +60,31 @@ public class ConceptController {
     @GetMapping("/limitup")
     @ResponseBody
     public List<ConceptResultStatistics>limitup(){
-        return priceService.getLimitUpConcept();
+        return priceService.getLimitUpConceptCache();
     }
 
     @GetMapping("/limitdown")
     @ResponseBody
     public List<ConceptResultStatistics> limitdown(){
-        return priceService.getLimitDownConcept();
+        return priceService.getLimitDownConceptCache();
     }
 
     @GetMapping("/limitupbreak")
     @ResponseBody
     public List<ConceptResultStatistics> limitupbreak(){
-        return priceService.getLimitUpBreakConcept();
+        return priceService.getLimitUpBreakConceptCache();
     }
 
     @GetMapping("/limitdownbreak")
     @ResponseBody
     public List<ConceptResultStatistics> limitdownbreak(){
-        return priceService.getLimitDownBreakConcept();
+        return priceService.getLimitDownBreakConceptCache();
+    }
+
+    @GetMapping("/fast5")
+    @ResponseBody
+    public List<ConceptResultStatistics> fast5(){
+        return priceService.getFast5ConceptCache();
     }
 
 

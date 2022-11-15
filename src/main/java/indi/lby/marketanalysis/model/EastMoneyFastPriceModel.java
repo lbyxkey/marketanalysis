@@ -11,6 +11,10 @@ import java.io.Serializable;
 @Data
 @RedisHash("realtimeprice")
 public class EastMoneyFastPriceModel implements Serializable {
+    @Id
+    @Indexed
+    @ExtractBy(value = "$.data.f57",type = ExtractBy.Type.JsonPath)
+    String symbol;
     @ExtractBy(value = "$.data.f43",type = ExtractBy.Type.JsonPath)
     int now;
     @ExtractBy(value = "$.data.f44",type = ExtractBy.Type.JsonPath)
@@ -25,10 +29,8 @@ public class EastMoneyFastPriceModel implements Serializable {
     int limitup;
     @ExtractBy(value = "$.data.f52",type = ExtractBy.Type.JsonPath)
     int limitdown;
-    @Id
-    @Indexed
-    @ExtractBy(value = "$.data.f57",type = ExtractBy.Type.JsonPath)
-    String symbol;
+    @ExtractBy(value = "$.data.f60",type = ExtractBy.Type.JsonPath)
+    int preclose;
     @ExtractBy(value = "$.data.f58",type = ExtractBy.Type.JsonPath)
     String name;
 }
