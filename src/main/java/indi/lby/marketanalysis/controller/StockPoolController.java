@@ -20,6 +20,7 @@ public class StockPoolController {
     @PostMapping("/add")
     @ResponseStatus(HttpStatus.ACCEPTED)
     public void addPool(Principal principal,@RequestBody Map<String,String> params){
+
         stockPoolService.add(principal.getName(),params);
     }
 }

@@ -8,11 +8,14 @@ import indi.lby.marketanalysis.projections.ConceptStocksProjection;
 import indi.lby.marketanalysis.projections.ConceptTypeShowProjection;
 import indi.lby.marketanalysis.service.ConceptService;
 import indi.lby.marketanalysis.service.PriceService;
+import indi.lby.marketanalysis.service.SpiderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.security.Principal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -86,6 +89,7 @@ public class ConceptController {
     public List<ConceptResultStatistics> fast5(){
         return priceService.getFast5ConceptCache();
     }
+
 
 
 }

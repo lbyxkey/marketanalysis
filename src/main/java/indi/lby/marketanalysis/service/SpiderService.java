@@ -22,7 +22,7 @@ import us.codecraft.webmagic.Site;
 import us.codecraft.webmagic.Spider;
 import us.codecraft.webmagic.model.OOSpider;
 
-import java.time.Duration;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -93,6 +93,8 @@ public class SpiderService {
     @Value("${eastmoney.threadnum}")
     int eastMoneyThreadNum;
 
+    @Value("${function.datamantance.refreshconceptonstart}")
+    boolean refreshconceptonstart;
     @Autowired
     EastMoneyPricePipeline eastMoneyPricePipeline;
     @Autowired
@@ -106,6 +108,9 @@ public class SpiderService {
         updateStockBasic();
         updateDaily();
         //如果上次距离本次时间大于24小时，刷新
+        if(refreshconceptonstart){
+            updateTHSConcept();
+        }
 //        LocalDateTime now=LocalDateTime.now();
 //        String conceptUpdateDatetimeStr=stringRedisTemplate.opsForValue().get(conceptUpdateDatetimeName);
 //        if(conceptUpdateDatetimeStr!=null){
@@ -214,6 +219,7 @@ public class SpiderService {
         log.info("2、刷新同花顺概念-刷新概念列表");
         OOSpider.create(Site.me(), thsConceptsPipeline, THSConceptsModel.class).addUrl(
                 "http://q.10jqka.com.cn/gn").thread(5).run();
+        addUserAddTHSConcept();
         //刷新概念
         log.info("3、刷新同花顺概念-刷新概念");
         Spider spider =
@@ -230,6 +236,62 @@ public class SpiderService {
         spider.run();
         log.info("刷新同花顺概念-完成");
         stringRedisTemplate.opsForValue().set(conceptUpdateDatetimeName, LocalDateTime.now().format(formatter));
+    }
+
+    @Autowired
+    JpaConceptUserAddRepository jpaConceptUserAddRepository;
+
+    @Autowired
+    JpaConceptTypeRepository jpaConceptTypeRepository;
+
+    private void addUserAddTHSConcept(){
+        List<ConceptUserAdd> conceptUserAddList=jpaConceptUserAddRepository.findAllByOrderByName();
+        int deletecount=0;
+        int addcount=0;
+        ConceptType conceptType=jpaConceptTypeRepository.findConceptTypeByType(5);
+        for (ConceptUserAdd conceptUserAdd:conceptUserAddList) {
+            String name=conceptUserAdd.getName();
+            Concept concept=jpaConceptRepository.findConceptByName(name);
+            if(concept!=null){
+                jpaConceptUserAddRepository.delete(conceptUserAdd);
+                deletecount++;
+            }else{
+                Concept newconcept=new Concept();
+                newconcept.setConceptType(conceptType);
+                newconcept.setName(name);
+                newconcept.setCode(conceptUserAdd.getCode());
+                jpaConceptRepository.save(newconcept);
+                addcount++;
+            }
+        }
+        log.info("处理手工概念，删除"+deletecount+"个，添加"+addcount+"个");
+    }
+
+    @Autowired
+    THSUserAddConceptsPipeline thsUserAddConceptsPipeline;
+    @Autowired
+    THSUserAddConceptPageProcessor thsUserAddConceptPageProcessor;
+    @Async
+    public void addTHSConcept(String code){
+        log.info("手工添加同花顺概念"+code);
+        Spider.create(thsUserAddConceptPageProcessor).addPipeline(thsUserAddConceptsPipeline).addUrl(
+                "http://q.10jqka.com.cn/thshy/detail/code/"+code).thread(1).run();
+        Concept concept = jpaConceptRepository.findConceptByCode(code);
+        if(concept==null){
+            log.warn("手工添加失败同花顺概念"+code);
+        }else{
+            Spider spider =
+                    Spider.create(thsConceptStockPageProcessor).addPipeline(thsConceptStockPipeline).thread(1);
+            String newurl = "http://q.10jqka.com.cn/" + concept.getConceptType().getShortname() + "/detail/field/" + concept.getConceptType().getCode() +
+                        "/order/desc/page/1/ajax/1/code/" + concept.getCode();
+            Request request = new Request(newurl);
+            String cookie = thsCookie.getCookie();
+            request.addCookie("v", cookie);
+            spider.addRequest(request);
+            spider.run();
+            log.info("手工添加同花顺概念-完成");
+        }
+
     }
 
     boolean spiderRunning=false;
@@ -281,4 +343,6 @@ public class SpiderService {
         setSpiderRunningState(false);
         log.info("EastMoney总数量"+spider.getPageCount()+"/"+stockBasicList.size()+"个，总运行时间"+stopWatch.getTotalTimeSeconds()+"秒");
     }
+
+
 }

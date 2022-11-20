@@ -35,7 +35,9 @@ public class THSConceptsPipeline implements PageModelPipeline {
     public void init(){
         List<ConceptType> conceptTypeList= jpaConceptTypeRepository.findAll();
         for (ConceptType t:conceptTypeList) {
-            shortMap.put(t.getShortname(),t);
+            if(t.getType()!=5){
+                shortMap.put(t.getShortname(),t);
+            }
         }
     }
 

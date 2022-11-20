@@ -7,16 +7,22 @@ import indi.lby.marketanalysis.service.PriceService;
 import indi.lby.marketanalysis.service.SpiderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDate;
 
 @Slf4j
-@Controller
+@RestController
+@RequestMapping("/spider")
 @ConditionalOnProperty(name = "function.datamantance")
 public class SpiderController {
     @Autowired
@@ -24,9 +30,13 @@ public class SpiderController {
 
     @Autowired
     PreComputeController preComputeController;
+    @Autowired
+    PriceService priceService;
+
 
     @PostConstruct
     public void runOnStart() throws JsonProcessingException {
+        //TradeCal tradeCal=jpaTradeCalRepository.findByCaldate(LocalDate.now());
         spiderService.runOnStart();
     }
 
@@ -36,8 +46,7 @@ public class SpiderController {
         spiderService.updateCal();
     }
 
-    @Autowired
-    PriceService priceService;
+
     @Async
     @Scheduled(cron = "0 0 16 * * 1-5")
     public void doAfterNoon() throws JsonProcessingException {
@@ -110,6 +119,15 @@ public class SpiderController {
     @Scheduled(cron = "0 0 15 * * 1-5")
     public void updateEastMoneyPriceAfterNoon2(){
         spiderService.updateEastMoneyPrice();
+    }
+
+//    @Autowired
+//    SpiderService spiderService;
+    @GetMapping("/addconcept/{conceptcode}")
+    //@ResponseStatus(HttpStatus.ACCEPTED)
+    public void addPool(@PathVariable("conceptcode") String conceptcode){
+        //stockPoolService.add(principal.getName(),params);
+        spiderService.addTHSConcept(conceptcode);
     }
 
 }

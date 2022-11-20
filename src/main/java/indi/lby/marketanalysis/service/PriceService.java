@@ -11,7 +11,6 @@ import indi.lby.marketanalysis.projections.SymbolAndAmount;
 import indi.lby.marketanalysis.projections.SymbolAndTime;
 import indi.lby.marketanalysis.redisrepository.RedisEastMoneyFastPriceRepository;
 import indi.lby.marketanalysis.redisrepository.RedisStockPriceStateRepository;
-import indi.lby.marketanalysis.repository.JpaConceptStocksRepository;
 import indi.lby.marketanalysis.repository.JpaDailyRepository;
 import indi.lby.marketanalysis.repository.JpaStockBasicRepository;
 import indi.lby.marketanalysis.repository.JpaTradeCalRepository;
@@ -41,8 +40,7 @@ public class PriceService {
     JpaDailyRepository jpaDailyRepository;
     @Autowired
     JpaTradeCalRepository jpaTradeCalRepository;
-    @Autowired
-    JpaConceptStocksRepository jpaConceptStocksRepository;
+
     DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
     @Autowired
     StringRedisTemplate stringRedisTemplate;
@@ -56,10 +54,32 @@ public class PriceService {
     @PostConstruct
     public void init() {
         initStockBasicList();
+        initLastAmount();
+    }
+    public void newDayStart(){
+        initStockBasicList();
+        for (StockBasic stockBasic : stockBasicList) {
+            String symbol = stockBasic.getSymbol();
+            StockPriceState stockPriceState=redisStockPriceStateRepository.findBySymbol(symbol);
+            if(stockPriceState!=null){
+                redisStockPriceStateRepository.delete(stockPriceState);
+            }
+        }
+        initLastAmount();
     }
 
     public void initStockBasicList() {
         stockBasicList = jpaStockBasicRepository.findAll();
+    }
+
+    public void initLastAmount(){
+        lastAmount.clear();
+        for (StockBasic stockBasic : stockBasicList) {
+            Daily daily=jpaDailyRepository.findFirstBySymbolOrderByTradedateDesc(stockBasic);
+            if(daily!=null){
+                lastAmount.put(stockBasic.getSymbol(),daily.getAmount());
+            }
+        }
     }
 
 //    @NoArgsConstructor
@@ -96,25 +116,10 @@ public class PriceService {
     Map<String,Double> lastAmount=new HashMap<>();
 
 
-    public void newDayStart(){
-        lastAmount.clear();
-        for (StockBasic stockBasic : stockBasicList) {
-            String symbol = stockBasic.getSymbol();
-            StockPriceState stockPriceState=redisStockPriceStateRepository.findBySymbol(symbol);
-            if(stockPriceState!=null){
-                redisStockPriceStateRepository.delete(stockPriceState);
-            }
-        }
-        for (StockBasic stockBasic : stockBasicList) {
-            Daily daily=jpaDailyRepository.findFirstBySymbolOrderByTradedateDesc(stockBasic);
-            if(daily!=null){
-                lastAmount.put(stockBasic.getSymbol(),daily.getAmount());
-            }
-        }
-    }
+
 
     public void computePriceCache() {
-        this.newDayStart();
+        //this.newDayStart();
         limitUp.clear();
         limitDown.clear();
         limitUpBreak.clear();
@@ -256,6 +261,7 @@ public class PriceService {
             result.add(symbolAndAmount);
         }
         Collections.sort(result);
+        Collections.reverse(result);
         return result;
     }
 

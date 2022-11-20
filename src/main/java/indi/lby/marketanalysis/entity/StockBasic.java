@@ -30,7 +30,7 @@ public class StockBasic implements Serializable {
     private TradeCal listdate;
     private String symbol;
 
-    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.DETACH)
+    @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.REMOVE)
     @JoinColumn(name ="stockid")
     private List<ConceptStocks> conceptStocksList;
 

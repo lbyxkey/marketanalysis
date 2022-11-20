@@ -12,4 +12,7 @@ import java.util.List;
 @Repository
 public interface JpaConceptTypeRepository extends JpaRepository<ConceptType, Integer> {
     List<ConceptTypeShowProjection> findAllByOrderByTypeAsc();
+
+    ConceptType findConceptTypeByType(int typeid);
+
 }
